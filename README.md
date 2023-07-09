@@ -1,6 +1,6 @@
-# GEORGIAN WRITING WIZARD BACKEND
+# Georgian Spell Corrector Backend
 ## Description
-This is a backend for the Georgian Writing Wizard project.
+This is a backend for the Georgian Spell Corrector project.
 
 ## Installation
 1. Clone the repository
