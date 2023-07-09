@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - '80:80'
+    depends_on:
+        - db
+  db:
+    image: mongo:latest
+    ports:
+      - '27017:27017'
+    env_file:
+      - .env
+    environment:
+        - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+        - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - ./data/db:/data/db
