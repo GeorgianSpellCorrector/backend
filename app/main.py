@@ -8,11 +8,7 @@ from app.routers import api
 from app.utils.httpx import httpx_client_wrapper
 
 settings = FastAPISettings()
-app = FastAPI(
-    title=settings.app_name,
-    version=settings.version,
-    description=settings.description,
-)
+app = FastAPI(**settings.model_dump())
 
 app.include_router(api, prefix='/api')
 

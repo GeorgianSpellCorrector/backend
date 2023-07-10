@@ -23,7 +23,7 @@ async def create_and_check_text(text: TextInputSerializer = Body(), user_id: str
                                 db: AsyncIOMotorClient = Depends(get_database)) -> List[SpellErrorSerializer]:
     text_to_check = text.text
     response = await async_httpx.post(
-        **gsc_settings.data,
+        **gsc_settings.payload,
         json={'inputs': text_to_check}
     )
     if response.status_code != 200:
