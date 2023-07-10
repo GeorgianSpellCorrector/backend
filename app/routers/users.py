@@ -1,42 +1,39 @@
 from datetime import datetime
 
 from bson import ObjectId
-from bson.errors import InvalidId
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.requests import Request
 
-from app.db.mongodb import get_database
-from app.models.generic import UserBase, User
+from app.db.mongodb.wrapper import get_database
+from app.models.generic import User
+from app.models.serializers import UserInputSerializer, UserOutputSerializer
+from app.routers.utils import check_object_id
 
 router = APIRouter()
 
 
 @router.post('/create_user')
-async def create_user(request: Request, user: UserBase, db: AsyncIOMotorClient = Depends(get_database)):
-    user = User(**user.model_dump(), ip_address=request.client.host,
-                created_at=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+async def create_user(request: Request, user: UserInputSerializer, db: AsyncIOMotorClient = Depends(get_database)):
+    user = User(**user.model_dump(), ip_address=request.client.host, created_at=datetime.utcnow())
     user = await db['users'].insert_one(user.model_dump())
-    return {'_id': str(user['_id'])}
+    return {'_id': str(user.inserted_id)}
 
 
 @router.get('/get_user/{pk}')
-async def get_user(pk: str, db: AsyncIOMotorClient = Depends(get_database)):
-    try:
-        user = await db['users'].find_one({'_id': ObjectId(pk)})
-    except InvalidId:
-        return {'message': f'User not found!'}
-    if user is None:
-        return {'message': f'User not found!'}
-    return User(**user)
+async def get_user(pk: str = Depends(check_object_id),
+                   db: AsyncIOMotorClient = Depends(get_database)) -> UserOutputSerializer:
+    user = await db['users'].find_one({'_id': ObjectId(pk)})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found!')
+    return UserOutputSerializer(**user)
 
 
 @router.post('/remove_user/{pk}')
-async def remove_user(pk: str, db: AsyncIOMotorClient = Depends(get_database)):
-    try:
-        user = await db['users'].delete_one({'_id': ObjectId(pk)})
-    except InvalidId:
-        return {'message': f'User not found!'}
-    if user.deleted_count == 0:
-        return {'message': f'User not found!'}
-    return {'message': f'User {pk} deleted successfully'}
+async def remove_user(pk: str = Depends(check_object_id), db: AsyncIOMotorClient = Depends(get_database)):
+    user = await db['users'].find_one({'_id': ObjectId(pk)})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found!')
+    await db['texts'].delete_many({'user_id': ObjectId(pk)})
+    await db['users'].delete_one({'_id': ObjectId(pk)})
+    return {'_id': pk}

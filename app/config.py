@@ -18,3 +18,15 @@ class MongoDBSettings(BaseSettings):
     MONGO_URI: str = (
         f'mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?retryWrites=true&w=majority&authSource=admin'
     )
+
+
+class GeorgianSpellCorrectorModelSettings(BaseSettings):
+    MODEL_API: str = os.getenv('GSC_MODEL_API')
+    BEARER_TOKEN: str = os.getenv('GSC_BEARER_TOKEN')
+
+    @property
+    def data(self):
+        return {
+            'url': self.MODEL_API,
+            'headers': {'Authorization': f'Bearer {self.BEARER_TOKEN}'},
+        }
