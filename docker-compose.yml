@@ -3,7 +3,7 @@ services:
   app:
     build: .
     ports:
-      - '80:80'
+      - '70:70'
     depends_on:
         - db
     env_file:
