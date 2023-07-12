@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from app.utils.inference import inference_wrapper
 from app.config import FastAPISettings
 from app.db.mongodb.indexes import create_indexes_if_necessary
 from app.db.mongodb.wrapper import mongo_client_wrapper, get_database
@@ -25,6 +26,7 @@ app.add_middleware(
 async def startup():
     mongo_client_wrapper.start()
     httpx_client_wrapper.start()
+    inference_wrapper.start()
     db = await get_database()
     await create_indexes_if_necessary(db)
 

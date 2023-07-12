@@ -6,6 +6,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, Body, Query, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 
+from app.utils.inference import inference_wrapper
 from app.config import GeorgianSpellCorrectorModelSettings
 from app.db.mongodb.wrapper import get_database
 from app.models.generic import Text, PydanticObjectId
@@ -22,14 +23,8 @@ async def create_and_check_text(text: TextInputSerializer = Body(), user_id: str
                                 async_httpx=Depends(httpx_client_wrapper),
                                 db: AsyncIOMotorClient = Depends(get_database)) -> List[SpellErrorSerializer]:
     text_to_check = text.text
-    response = await async_httpx.post(
-        **gsc_settings.payload,
-        json={'inputs': text_to_check}
-    )
-    if response.status_code != 200:
-        raise HTTPException(status_code=400, detail=response.text)
-    data = response.json()
-    corrected_texts = re.sub(' +', ' ', data[0]['generated_text'].strip()).split(' ')
+    response = await inference_wrapper.inference([text_to_check])
+    corrected_texts = re.sub(' +', ' ', response[0].strip()).split(' ')
     errors = []
     offset = 0
     good_text = ''
