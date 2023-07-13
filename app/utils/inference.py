@@ -4,10 +4,10 @@ from typing import List
 
 
 class InferenceWrapper:
-    model: AutoModelForSeq2SeqLM
-    tokenizer: AutoTokenizer
+    model = None
+    tokenizer = None
     MODEL_PATH: str = 'ZurabDz/geo-spell-check-v8'
-    DEVICE: str = 'cuda' if torch.cuda.is_available() else 'cpu' 
+    DEVICE: str = 'cuda' if torch.cuda.is_available() else 'cpu'
     USE_HALF: bool = True if DEVICE == 'cuda' else False
 
     TOP_K: float = 30
@@ -22,12 +22,11 @@ class InferenceWrapper:
         self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_PATH)
 
     async def inference(self, input: List[str]):
-        input_ids = self.tokenizer(input, return_tensors='pt', 
+        input_ids = self.tokenizer(input, return_tensors='pt',
                                    padding=True)['input_ids']
-        
+
         if self.USE_HALF:
             input_ids = input_ids.half().to(self.DEVICE)
-
 
         outputs = self.model.generate(
             input_ids,
@@ -39,9 +38,9 @@ class InferenceWrapper:
         )
 
         output_text = self.tokenizer.batch_decode(outputs,
-                                                   skip_special_tokens=True)
-        
+                                                  skip_special_tokens=True)
+
         return output_text
-    
+
 
 inference_wrapper = InferenceWrapper()

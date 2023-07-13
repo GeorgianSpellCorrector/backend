@@ -10,6 +10,13 @@ from app.models.generic import PydanticObjectId
 class UserInputSerializer(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
 
+    @field_validator('username')
+    def check_username(cls, v):
+        v = v.lower()
+        if not v.isascii():
+            raise ValueError('Username must be alphanumeric!')
+        return v
+
 
 class UserOutputSerializer(BaseModel):
     id: Union[PydanticObjectId, ObjectId] = Field(..., alias='_id')

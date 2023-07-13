@@ -15,7 +15,12 @@ router = APIRouter()
 
 @router.post('/create_user')
 async def create_user(request: Request, user: UserInputSerializer, db: AsyncIOMotorClient = Depends(get_database)):
-    user = User(**user.model_dump(), ip_address=request.client.host, created_at=datetime.utcnow())
+    user_dump = user.model_dump()
+    user = await db['users'].find_one({'username': user_dump['username'], 'ip_address': request.client.host})
+    if user:
+        return {'_id': str(user['_id'])}
+
+    user = User(**user_dump, ip_address=request.client.host, created_at=datetime.utcnow())
     user = await db['users'].insert_one(user.model_dump())
     return {'_id': str(user.inserted_id)}
 
